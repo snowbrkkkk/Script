@@ -1,218 +1,316 @@
--- Serviços
+--// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local TextChatService = game:GetService("TextChatService")
+local TradeRemote = ReplicatedStorage:WaitForChild("Main"):WaitForChild("Trade")
 
--- Criar GUI principal
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "TradeGui"
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+--// Create main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TradeAcceptGui"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 200)
-frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.Active = true
-frame.Draggable = true
+-- Main Frame
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 130)
+Frame.Position = UDim2.new(0.4, 0, 0.4, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
 
-local stroke = Instance.new("UIStroke", frame)
-stroke.Color = Color3.fromRGB(170, 0, 255)
-stroke.Thickness = 2
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 12)
 
-local corner = Instance.new("UICorner", frame)
-corner.CornerRadius = UDim.new(0, 10)
+local UIStroke = Instance.new("UIStroke", Frame)
+UIStroke.Color = Color3.fromRGB(170, 0, 255)
+UIStroke.Thickness = 2
 
--- Título
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundTransparency = 1
-title.Text = "Snowzinn Hub"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
+-- Title Label with blinking text animation
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.Parent = Frame
 
--- Botão fechar
-local closeBtn = Instance.new("TextButton", frame)
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -35, 0, 5)
-closeBtn.Text = "X"
-closeBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 60)
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.Font = Enum.Font.Gotham
-closeBtn.TextSize = 14
-Instance.new("UICorner", closeBtn)
+local texts = {"Snowzinn Hub", "Sor_umPlayer", "Duplicado Pump"}
+local textIndex = 1
 
-closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
+-- Animate title text
+spawn(function()
+    while true do
+        for i = 1, #texts do
+            for len = 0, #texts[i] do
+                Title.Text = string.sub(texts[i], 1, len)
+                wait(0.05)
+            end
+            wait(1)
+            for len = #texts[i], 0, -1 do
+                Title.Text = string.sub(texts[i], 1, len)
+                wait(0.02)
+            end
+        end
+    end
 end)
 
--- Botão Lista de Jogadores
-local listBtn = Instance.new("TextButton", frame)
-listBtn.Size = UDim2.new(0, 120, 0, 40)
-listBtn.Position = UDim2.new(0.5, -60, 0, 40)
-listBtn.Text = "Lista de Jogadores"
-listBtn.TextColor3 = Color3.new(1, 1, 1)
-listBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-listBtn.Font = Enum.Font.GothamBold
-listBtn.TextSize = 14
-Instance.new("UICorner", listBtn)
+-- Accept Button
+local AcceptBtn = Instance.new("TextButton")
+AcceptBtn.Size = UDim2.new(0, 100, 0, 40)
+AcceptBtn.Position = UDim2.new(0, 10, 0, 90)
+AcceptBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+AcceptBtn.TextColor3 = Color3.new(1, 1, 1)
+AcceptBtn.Font = Enum.Font.GothamBold
+AcceptBtn.TextSize = 18
+AcceptBtn.Text = "ACCEPT"
+AcceptBtn.Parent = Frame
+local btnCorner = Instance.new("UICorner", AcceptBtn)
+btnCorner.CornerRadius = UDim.new(0, 8)
 
--- Botão Accept
-local acceptBtn = Instance.new("TextButton", frame)
-acceptBtn.Size = UDim2.new(0, 100, 0, 40)
-acceptBtn.Position = UDim2.new(0.5, -110, 1, -50)
-acceptBtn.Text = "Accept"
-acceptBtn.TextColor3 = Color3.new(1, 1, 1)
-acceptBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-acceptBtn.Font = Enum.Font.GothamBold
-acceptBtn.TextSize = 18
-Instance.new("UICorner", acceptBtn)
+-- Auto-Accept toggle button
+local AutoAcceptBtn = Instance.new("TextButton")
+AutoAcceptBtn.Size = UDim2.new(0, 100, 0, 40)
+AutoAcceptBtn.Position = UDim2.new(0, 120, 0, 90)
+AutoAcceptBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+AutoAcceptBtn.TextColor3 = Color3.new(1, 1, 1)
+AutoAcceptBtn.Font = Enum.Font.GothamBold
+AutoAcceptBtn.TextSize = 18
+AutoAcceptBtn.Text = "Auto-Accept: OFF"
+AutoAcceptBtn.Parent = Frame
+local btnCorner2 = Instance.new("UICorner", AutoAcceptBtn)
+btnCorner2.CornerRadius = UDim.new(0, 8)
 
--- Botão Auto-Accept
-local autoAcceptBtn = Instance.new("TextButton", frame)
-autoAcceptBtn.Size = UDim2.new(0, 100, 0, 40)
-autoAcceptBtn.Position = UDim2.new(0.5, 10, 1, -50)
-autoAcceptBtn.Text = "Auto-Accept"
-autoAcceptBtn.TextColor3 = Color3.new(1, 1, 1)
-autoAcceptBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-autoAcceptBtn.Font = Enum.Font.GothamBold
-autoAcceptBtn.TextSize = 18
-Instance.new("UICorner", autoAcceptBtn)
+local autoAcceptEnabled = false
+AutoAcceptBtn.MouseButton1Click:Connect(function()
+    autoAcceptEnabled = not autoAcceptEnabled
+    AutoAcceptBtn.Text = autoAcceptEnabled and "Auto-Accept: ON" or "Auto-Accept: OFF"
+end)
 
--- Inputs dos slots
-local function createSlotInput(name, xOffset)
-    local input = Instance.new("TextBox", gui)
-    input.Size = UDim2.new(0, 100, 0, 30)
-    input.Position = UDim2.new(0, frame.AbsolutePosition.X + xOffset, 0, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y + 10)
-    input.Text = name .. ": 1"
-    input.Name = name
-    input.PlaceholderText = "1-8"
-    input.TextColor3 = Color3.new(1,1,1)
-    input.BackgroundColor3 = Color3.fromRGB(35,35,35)
-    input.Font = Enum.Font.Gotham
-    input.TextSize = 14
-    Instance.new("UICorner", input)
-    return input
+-- Inputs Frame (outside main frame but moves with it)
+local InputsFrame = Instance.new("Frame")
+InputsFrame.Size = UDim2.new(0, 160, 0, 90)
+InputsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+InputsFrame.Position = UDim2.new(0, Frame.AbsolutePosition.X + Frame.AbsoluteSize.X + 10, 0, Frame.AbsolutePosition.Y)
+InputsFrame.Parent = ScreenGui
+local inputsUICorner = Instance.new("UICorner", InputsFrame)
+inputsUICorner.CornerRadius = UDim.new(0, 12)
+local inputsStroke = Instance.new("UIStroke", InputsFrame)
+inputsStroke.Color = Color3.fromRGB(170, 0, 255)
+inputsStroke.Thickness = 2
+
+-- Function to update InputsFrame position when main frame moves
+Frame:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+    InputsFrame.Position = UDim2.new(0, Frame.AbsolutePosition.X + Frame.AbsoluteSize.X + 10, 0, Frame.AbsolutePosition.Y)
+end)
+
+-- Label and TextBox for Slot 1
+local slot1Label = Instance.new("TextLabel")
+slot1Label.Size = UDim2.new(0, 150, 0, 25)
+slot1Label.Position = UDim2.new(0, 5, 0, 5)
+slot1Label.BackgroundTransparency = 1
+slot1Label.Text = "Slot 1 (Banco):"
+slot1Label.TextColor3 = Color3.new(1,1,1)
+slot1Label.Font = Enum.Font.GothamBold
+slot1Label.TextSize = 16
+slot1Label.TextXAlignment = Enum.TextXAlignment.Left
+slot1Label.Parent = InputsFrame
+
+local slot1Input = Instance.new("TextBox")
+slot1Input.Size = UDim2.new(0, 150, 0, 25)
+slot1Input.Position = UDim2.new(0, 5, 0, 30)
+slot1Input.Text = "1"
+slot1Input.ClearTextOnFocus = false
+slot1Input.TextColor3 = Color3.new(1,1,1)
+slot1Input.BackgroundColor3 = Color3.fromRGB(30,30,30)
+slot1Input.Font = Enum.Font.GothamBold
+slot1Input.TextSize = 18
+slot1Input.Parent = InputsFrame
+local slot1Corner = Instance.new("UICorner", slot1Input)
+slot1Corner.CornerRadius = UDim.new(0, 6)
+
+-- Label and TextBox for Slot 2
+local slot2Label = Instance.new("TextLabel")
+slot2Label.Size = UDim2.new(0, 150, 0, 25)
+slot2Label.Position = UDim2.new(0, 5, 0, 60)
+slot2Label.BackgroundTransparency = 1
+slot2Label.Text = "Slot 2 (Banco):"
+slot2Label.TextColor3 = Color3.new(1,1,1)
+slot2Label.Font = Enum.Font.GothamBold
+slot2Label.TextSize = 16
+slot2Label.TextXAlignment = Enum.TextXAlignment.Left
+slot2Label.Parent = InputsFrame
+
+local slot2Input = Instance.new("TextBox")
+slot2Input.Size = UDim2.new(0, 150, 0, 25)
+slot2Input.Position = UDim2.new(0, 5, 0, 85)
+slot2Input.Text = "1"
+slot2Input.ClearTextOnFocus = false
+slot2Input.TextColor3 = Color3.new(1,1,1)
+slot2Input.BackgroundColor3 = Color3.fromRGB(30,30,30)
+slot2Input.Font = Enum.Font.GothamBold
+slot2Input.TextSize = 18
+slot2Input.Parent = InputsFrame
+local slot2Corner = Instance.new("UICorner", slot2Input)
+slot2Corner.CornerRadius = UDim.new(0, 6)
+
+-- Spam accept function
+local function spamAcceptForSeconds(seconds)
+    local startTime = tick()
+    while tick() - startTime < seconds do
+        TradeRemote:FireServer("ACCEPT")
+        wait(0.5)
+    end
 end
 
-local slot1Input = createSlotInput("Slot1", 0)
-local slot2Input = createSlotInput("Slot2", 110)
+-- Accept button logic
+AcceptBtn.MouseButton1Click:Connect(function()
+    local slot1Num = tonumber(slot1Input.Text)
+    local slot2Num = tonumber(slot2Input.Text)
 
-frame:GetPropertyChangedSignal("Position"):Connect(function()
-    slot1Input.Position = UDim2.new(0, frame.AbsolutePosition.X, 0, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y + 10)
-    slot2Input.Position = UDim2.new(0, frame.AbsolutePosition.X + 110, 0, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y + 10)
+    -- Validate inputs (between 1 and 8)
+    if not slot1Num or slot1Num < 1 or slot1Num > 8 then
+        slot1Num = 1
+    end
+    if not slot2Num or slot2Num < 1 or slot2Num > 8 then
+        slot2Num = 1
+    end
+
+    -- Primeiro manda o ACCEPT para iniciar trade (igual no seu código)
+    TradeRemote:FireServer("Accept")
+
+    wait(3)
+
+    -- Adiciona item slot 1 uma vez
+    TradeRemote:FireServer("Add", "Item", 1, tostring(slot1Num))
+
+    wait(1)
+
+    -- Adiciona item slot 2 três vezes
+    for i = 1, 3 do
+        TradeRemote:FireServer("Add", "Item", 2, tostring(slot2Num))
+        wait(0.4)
+    end
+
+    -- Depois spama accept por 20s
+    spamAcceptForSeconds(20)
 end)
 
--- Lista de jogadores
-local playerList = Instance.new("Frame", gui)
-playerList.Size = UDim2.new(0, 200, 0, 300)
-playerList.Position = UDim2.new(0.65, 0, 0.3, 0)
-playerList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-playerList.Visible = false
-Instance.new("UICorner", playerList)
+-- Auto-accept toggle logic (para ficar spammando ACCEPT a qualquer momento)
+coroutine.wrap(function()
+    while true do
+        if autoAcceptEnabled then
+            TradeRemote:FireServer("ACCEPT")
+        end
+        wait(0.5)
+    end
+end)()
 
-local uiList = Instance.new("UIListLayout", playerList)
-uiList.SortOrder = Enum.SortOrder.LayoutOrder
-uiList.Padding = UDim.new(0, 5)
-
--- Botão Enviar-Trade fixo no topo da lista
-local sendTradeBtn = Instance.new("TextButton", playerList)
-sendTradeBtn.Size = UDim2.new(1, -10, 0, 30)
-sendTradeBtn.Position = UDim2.new(0, 5, 0, 5)
-sendTradeBtn.Text = "Enviar-Trade"
-sendTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-sendTradeBtn.TextColor3 = Color3.new(1, 1, 1)
-sendTradeBtn.Font = Enum.Font.GothamBold
-sendTradeBtn.TextSize = 14
-Instance.new("UICorner", sendTradeBtn)
-
-uiList.Padding = UDim.new(0, 40)
+local TextChatService = game:GetService("TextChatService")
+local Players = game:GetService("Players")
 
 local selectedPlayer = nil
 
-listBtn.MouseButton1Click:Connect(function()
-    playerList.Visible = not playerList.Visible
-    
-    -- Remove os botões anteriores de jogadores para atualizar
-    for _, child in ipairs(playerList:GetChildren()) do
-        if child:IsA("TextButton") and child ~= sendTradeBtn then
+local PlayerTradeGui = Instance.new("ScreenGui")
+PlayerTradeGui.Name = "PlayerTradeGui"
+PlayerTradeGui.Parent = game.CoreGui
+PlayerTradeGui.ResetOnSpawn = false
+
+local playerListFrame = Instance.new("Frame")
+playerListFrame.Size = UDim2.new(0, 180, 0, 220)
+playerListFrame.Position = UDim2.new(0.75, 0, 0.3, 0)
+playerListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+playerListFrame.Visible = false
+playerListFrame.Active = true -- importante para receber input de mouse
+playerListFrame.Draggable = true -- torna o frame arrastável
+playerListFrame.Parent = PlayerTradeGui
+
+local playerListUICorner = Instance.new("UICorner", playerListFrame)
+playerListUICorner.CornerRadius = UDim.new(0, 12)
+local playerListUIStroke = Instance.new("UIStroke", playerListFrame)
+playerListUIStroke.Color = Color3.fromRGB(170, 0, 255)
+playerListUIStroke.Thickness = 2
+
+local playerListTitle = Instance.new("TextLabel")
+playerListTitle.Size = UDim2.new(1, 0, 0, 30)
+playerListTitle.BackgroundTransparency = 1
+playerListTitle.TextColor3 = Color3.new(1, 1, 1)
+playerListTitle.Font = Enum.Font.GothamBold
+playerListTitle.TextSize = 18
+playerListTitle.Text = "Jogadores Online"
+playerListTitle.Parent = playerListFrame
+
+local UIListLayout = Instance.new("UIListLayout", playerListFrame)
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+local togglePlayerListBtn = Instance.new("TextButton")
+togglePlayerListBtn.Size = UDim2.new(0, 180, 0, 30)
+togglePlayerListBtn.Position = UDim2.new(0.75, 0, 0.25, 0)
+togglePlayerListBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+togglePlayerListBtn.TextColor3 = Color3.new(1, 1, 1)
+togglePlayerListBtn.Font = Enum.Font.GothamBold
+togglePlayerListBtn.TextSize = 16
+togglePlayerListBtn.Text = "Mostrar Lista de Jogadores"
+togglePlayerListBtn.Parent = PlayerTradeGui
+
+local toggleBtnCorner = Instance.new("UICorner", togglePlayerListBtn)
+toggleBtnCorner.CornerRadius = UDim.new(0, 8)
+
+togglePlayerListBtn.MouseButton1Click:Connect(function()
+    playerListFrame.Visible = not playerListFrame.Visible
+    if playerListFrame.Visible then
+        togglePlayerListBtn.Text = "Esconder Lista de Jogadores"
+    else
+        togglePlayerListBtn.Text = "Mostrar Lista de Jogadores"
+    end
+
+    for _, child in ipairs(playerListFrame:GetChildren()) do
+        if child:IsA("TextButton") then
             child:Destroy()
         end
     end
 
-    if playerList.Visible then
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= Players.LocalPlayer then
-                local btn = Instance.new("TextButton", playerList)
-                btn.Size = UDim2.new(1, -10, 0, 30)
-                btn.Text = plr.Name
-                btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                btn.TextColor3 = Color3.new(1, 1, 1)
-                btn.Font = Enum.Font.Gotham
-                btn.TextSize = 14
-                Instance.new("UICorner", btn)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Players.LocalPlayer then
+            local plrBtn = Instance.new("TextButton")
+            plrBtn.Size = UDim2.new(1, -20, 0, 30)
+            plrBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            plrBtn.TextColor3 = Color3.new(1, 1, 1)
+            plrBtn.Font = Enum.Font.Gotham
+            plrBtn.TextSize = 16
+            plrBtn.Text = plr.Name
+            plrBtn.Parent = playerListFrame
+            plrBtn.Position = UDim2.new(0, 10, 0, 30)
 
-                btn.MouseButton1Click:Connect(function()
-                    selectedPlayer = plr.Name
-                    playerList.Visible = false
-                end)
-            end
+            local btnCorner = Instance.new("UICorner", plrBtn)
+            btnCorner.CornerRadius = UDim.new(0, 6)
+
+            plrBtn.MouseButton1Click:Connect(function()
+                selectedPlayer = plr.Name
+                playerListFrame.Visible = false
+                togglePlayerListBtn.Text = "Mostrar Lista de Jogadores"
+            end)
         end
     end
 end)
 
--- Função para enviar comando trade no chat
+local sendTradeBtn = Instance.new("TextButton")
+sendTradeBtn.Size = UDim2.new(0, 180, 0, 30)
+sendTradeBtn.Position = UDim2.new(0.75, 0, 0.21, 0)
+sendTradeBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
+sendTradeBtn.TextColor3 = Color3.new(1, 1, 1)
+sendTradeBtn.Font = Enum.Font.GothamBold
+sendTradeBtn.TextSize = 16
+sendTradeBtn.Text = "Enviar Trade"
+sendTradeBtn.Parent = PlayerTradeGui
+
+local sendBtnCorner = Instance.new("UICorner", sendTradeBtn)
+sendBtnCorner.CornerRadius = UDim.new(0, 8)
+
 sendTradeBtn.MouseButton1Click:Connect(function()
-    if not selectedPlayer then
-        warn("Nenhum jogador selecionado!")
-        return
-    end
-    -- Envia o comando "!trade nome"
-    TextChatService.TextChannels.RBXGeneral:SendAsync("!trade " .. selectedPlayer)
-end)
-
--- Função para enviar itens e depois aceitar
-acceptBtn.MouseButton1Click:Connect(function()
-    if not selectedPlayer then return end
-
-    -- Ler os slots (garantir que é número entre 1 e 8)
-    local function parseSlot(text)
-        local n = tonumber(text:match("%d+"))
-        if not n then return 1 end
-        return math.clamp(n, 1, 8)
-    end
-
-    local slot1 = tostring(parseSlot(slot1Input.Text))
-    local slot2 = tostring(parseSlot(slot2Input.Text))
-
-    -- Enviar itens (exemplo: 1x do slot1 e 3x do slot2)
-    ReplicatedStorage.Main.Trade:FireServer({"Add", "Item", 1, slot1})
-
-    for i=1, 3 do
-        ReplicatedStorage.Main.Trade:FireServer({"Add", "Item", 2, slot2})
-        task.wait(0.5)
-    end
-
-    -- Depois que enviar os itens, enviar Accept
-    ReplicatedStorage.Main.Trade:FireServer({"ACCEPT"})
-end)
-
--- Auto-Accept loop
-local autoAccepting = false
-local autoAcceptThread
-
-autoAcceptBtn.MouseButton1Click:Connect(function()
-    autoAccepting = not autoAccepting
-    if autoAccepting then
-        autoAcceptBtn.Text = "Stop Auto-Accept"
-        autoAcceptThread = coroutine.wrap(function()
-            while autoAccepting do
-                ReplicatedStorage.Main.Trade:FireServer({"ACCEPT"})
-                task.wait(1) -- envia accept a cada 1 segundo
-            end
-        end)
-        autoAcceptThread()
-    else
-        autoAcceptBtn.Text = "Auto-Accept"
+    if selectedPlayer then
+        TextChatService.TextChannels.RBXGeneral:SendAsync("!trade " .. selectedPlayer)
     end
 end)
