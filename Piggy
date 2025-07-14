@@ -1,14 +1,13 @@
--- Services
+-- Serviços
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 
--- Gui Setup
+-- Criar GUI principal
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "TradeGui"
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Main Frame
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 250, 0, 200)
 frame.Position = UDim2.new(0.3, 0, 0.3, 0)
@@ -32,7 +31,7 @@ title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
 
--- Close Button
+-- Botão fechar
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -43,7 +42,22 @@ closeBtn.Font = Enum.Font.Gotham
 closeBtn.TextSize = 14
 Instance.new("UICorner", closeBtn)
 
--- Accept Button
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Botão Lista de Jogadores
+local listBtn = Instance.new("TextButton", frame)
+listBtn.Size = UDim2.new(0, 120, 0, 40)
+listBtn.Position = UDim2.new(0.5, -60, 0, 40)
+listBtn.Text = "Lista de Jogadores"
+listBtn.TextColor3 = Color3.new(1, 1, 1)
+listBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+listBtn.Font = Enum.Font.GothamBold
+listBtn.TextSize = 14
+Instance.new("UICorner", listBtn)
+
+-- Botão Accept
 local acceptBtn = Instance.new("TextButton", frame)
 acceptBtn.Size = UDim2.new(0, 100, 0, 40)
 acceptBtn.Position = UDim2.new(0.5, -110, 1, -50)
@@ -54,18 +68,18 @@ acceptBtn.Font = Enum.Font.GothamBold
 acceptBtn.TextSize = 18
 Instance.new("UICorner", acceptBtn)
 
--- Player List Button
-local listBtn = Instance.new("TextButton", frame)
-listBtn.Size = UDim2.new(0, 100, 0, 40)
-listBtn.Position = UDim2.new(0.5, 10, 1, -50)
-listBtn.Text = "Lista de Jogadores"
-listBtn.TextColor3 = Color3.new(1, 1, 1)
-listBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-listBtn.Font = Enum.Font.GothamBold
-listBtn.TextSize = 14
-Instance.new("UICorner", listBtn)
+-- Botão Auto-Accept
+local autoAcceptBtn = Instance.new("TextButton", frame)
+autoAcceptBtn.Size = UDim2.new(0, 100, 0, 40)
+autoAcceptBtn.Position = UDim2.new(0.5, 10, 1, -50)
+autoAcceptBtn.Text = "Auto-Accept"
+autoAcceptBtn.TextColor3 = Color3.new(1, 1, 1)
+autoAcceptBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+autoAcceptBtn.Font = Enum.Font.GothamBold
+autoAcceptBtn.TextSize = 18
+Instance.new("UICorner", autoAcceptBtn)
 
--- Slot Input Fields (fora da GUI, mas ligados a ela)
+-- Inputs dos slots
 local function createSlotInput(name, xOffset)
     local input = Instance.new("TextBox", gui)
     input.Size = UDim2.new(0, 100, 0, 30)
@@ -84,13 +98,12 @@ end
 local slot1Input = createSlotInput("Slot1", 0)
 local slot2Input = createSlotInput("Slot2", 110)
 
--- Atualizar posição dos inputs quando a GUI se mover
 frame:GetPropertyChangedSignal("Position"):Connect(function()
     slot1Input.Position = UDim2.new(0, frame.AbsolutePosition.X, 0, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y + 10)
     slot2Input.Position = UDim2.new(0, frame.AbsolutePosition.X + 110, 0, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y + 10)
 end)
 
--- Lista de Jogadores
+-- Lista de jogadores
 local playerList = Instance.new("Frame", gui)
 playerList.Size = UDim2.new(0, 200, 0, 300)
 playerList.Position = UDim2.new(0.65, 0, 0.3, 0)
@@ -99,75 +112,107 @@ playerList.Visible = false
 Instance.new("UICorner", playerList)
 
 local uiList = Instance.new("UIListLayout", playerList)
-uiList.Padding = UDim.new(0, 5)
 uiList.SortOrder = Enum.SortOrder.LayoutOrder
+uiList.Padding = UDim.new(0, 5)
+
+-- Botão Enviar-Trade fixo no topo da lista
+local sendTradeBtn = Instance.new("TextButton", playerList)
+sendTradeBtn.Size = UDim2.new(1, -10, 0, 30)
+sendTradeBtn.Position = UDim2.new(0, 5, 0, 5)
+sendTradeBtn.Text = "Enviar-Trade"
+sendTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+sendTradeBtn.TextColor3 = Color3.new(1, 1, 1)
+sendTradeBtn.Font = Enum.Font.GothamBold
+sendTradeBtn.TextSize = 14
+Instance.new("UICorner", sendTradeBtn)
+
+uiList.Padding = UDim.new(0, 40)
 
 local selectedPlayer = nil
 
 listBtn.MouseButton1Click:Connect(function()
     playerList.Visible = not playerList.Visible
+    
+    -- Remove os botões anteriores de jogadores para atualizar
     for _, child in ipairs(playerList:GetChildren()) do
-        if child:IsA("TextButton") then
+        if child:IsA("TextButton") and child ~= sendTradeBtn then
             child:Destroy()
         end
     end
 
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= Players.LocalPlayer then
-            local btn = Instance.new("TextButton", playerList)
-            btn.Size = UDim2.new(1, -10, 0, 30)
-            btn.Text = plr.Name
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            btn.TextColor3 = Color3.new(1,1,1)
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 14
-            Instance.new("UICorner", btn)
+    if playerList.Visible then
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= Players.LocalPlayer then
+                local btn = Instance.new("TextButton", playerList)
+                btn.Size = UDim2.new(1, -10, 0, 30)
+                btn.Text = plr.Name
+                btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                btn.TextColor3 = Color3.new(1, 1, 1)
+                btn.Font = Enum.Font.Gotham
+                btn.TextSize = 14
+                Instance.new("UICorner", btn)
 
-            btn.MouseButton1Click:Connect(function()
-                selectedPlayer = plr.Name
-                playerList.Visible = false
-            end)
+                btn.MouseButton1Click:Connect(function()
+                    selectedPlayer = plr.Name
+                    playerList.Visible = false
+                end)
+            end
         end
     end
 end)
 
--- Accept button logic
+-- Função para enviar comando trade no chat
+sendTradeBtn.MouseButton1Click:Connect(function()
+    if not selectedPlayer then
+        warn("Nenhum jogador selecionado!")
+        return
+    end
+    -- Envia o comando "!trade nome"
+    TextChatService.TextChannels.RBXGeneral:SendAsync("!trade " .. selectedPlayer)
+end)
+
+-- Função para enviar itens e depois aceitar
 acceptBtn.MouseButton1Click:Connect(function()
     if not selectedPlayer then return end
 
-    -- Envia comando de trade
-    TextChatService.TextChannels.RBXGeneral:SendAsync("!trade " .. selectedPlayer)
+    -- Ler os slots (garantir que é número entre 1 e 8)
+    local function parseSlot(text)
+        local n = tonumber(text:match("%d+"))
+        if not n then return 1 end
+        return math.clamp(n, 1, 8)
+    end
 
-    -- Espera 5 segundos
-    task.wait(5)
+    local slot1 = tostring(parseSlot(slot1Input.Text))
+    local slot2 = tostring(parseSlot(slot2Input.Text))
 
-    local slot1 = tostring(math.clamp(tonumber(slot1Input.Text:match("%d+")) or 1, 1, 8))
-    local slot2 = tostring(math.clamp(tonumber(slot2Input.Text:match("%d+")) or 1, 1, 8))
-
-    -- Envia primeira trade
-    ReplicatedStorage.Main.Trade:FireServer({"ACCEPT"})
-    task.wait(3)
-
-    -- Slot 1 (1x)
+    -- Enviar itens (exemplo: 1x do slot1 e 3x do slot2)
     ReplicatedStorage.Main.Trade:FireServer({"Add", "Item", 1, slot1})
 
-    -- Slot 2 (3x)
-    for i = 1, 3 do
+    for i=1, 3 do
         ReplicatedStorage.Main.Trade:FireServer({"Add", "Item", 2, slot2})
         task.wait(0.5)
     end
 
-    -- Envia Accept por 20s
-    local startTime = tick()
-    while tick() - startTime < 20 do
-        ReplicatedStorage.Main.Trade:FireServer({"Accept"})
-        task.wait(0.5)
-    end
+    -- Depois que enviar os itens, enviar Accept
+    ReplicatedStorage.Main.Trade:FireServer({"ACCEPT"})
 end)
 
--- X para fechar a GUI
-closeBtn.MouseButton1Click:Connect(function()
-    frame.Visible = false
-    slot1Input.Visible = false
-    slot2Input.Visible = false
+-- Auto-Accept loop
+local autoAccepting = false
+local autoAcceptThread
+
+autoAcceptBtn.MouseButton1Click:Connect(function()
+    autoAccepting = not autoAccepting
+    if autoAccepting then
+        autoAcceptBtn.Text = "Stop Auto-Accept"
+        autoAcceptThread = coroutine.wrap(function()
+            while autoAccepting do
+                ReplicatedStorage.Main.Trade:FireServer({"ACCEPT"})
+                task.wait(1) -- envia accept a cada 1 segundo
+            end
+        end)
+        autoAcceptThread()
+    else
+        autoAcceptBtn.Text = "Auto-Accept"
+    end
 end)
