@@ -314,3 +314,52 @@ sendTradeBtn.MouseButton1Click:Connect(function()
         TextChatService.TextChannels.RBXGeneral:SendAsync("!trade " .. selectedPlayer)
     end
 end)
+
+-- Serviços
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TradeRemote = ReplicatedStorage:WaitForChild("Main"):WaitForChild("Trade")
+
+-- Cria a GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AutoAcceptGui"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Frame principal
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 80)
+Frame.Position = UDim2.new(0.4, 0, 0.4, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+-- Borda arredondada
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Frame
+
+-- Contorno roxo
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(170, 0, 255)
+UIStroke.Thickness = 2
+UIStroke.Parent = Frame
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Auto Accept"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.Parent = Frame
+
+-- Executar "Accept" infinitamente
+task.spawn(function()
+    while true do
+        TradeRemote:FireServer("Accept")
+        task.wait(0.5)
+    end
+end)
